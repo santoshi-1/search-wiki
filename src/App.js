@@ -1,21 +1,28 @@
-import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { Children, useState } from "react";
 import Autocomplete from "react-autocomplete";
+import Input from "./components/Input";
 import { useDebounce, useSearch } from "./hooks";
 
 function App() {
   const [value, setValue] = useState("");
 
-  const { articles, status, error } = useSearch(useDebounce(value));
+  const { articles, status, error } = useSearch(useDebounce(value, 100));
 
   return (
     <div className="App">
       <Autocomplete
         items={articles}
-        shouldItemRender={(item, value) =>
-          item.label.toLowerCase().indexOf(value.toLowerCase()) > -1
-        }
         getItemValue={(item) => item.label}
+        renderInput={Input}
+        inputProps={{ placeholder: "Input a Search Term" }}
+        renderMenu={(Children, value, style) => (
+          <div style={{ ...style }} className="input-suggestions">
+            {Children}
+            <a href={`/search?query=${value}`} className="search-link">
+              See all Results
+            </a>
+          </div>
+        )}
         renderItem={(item, highlighted) => (
           <div
             key={item.id}
