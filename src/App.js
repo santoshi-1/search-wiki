@@ -1,12 +1,12 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import Autocomplete from "react-autocomplete";
-import useSearch from "./hooks";
+import { useDebounce, useSearch } from "./hooks";
 
 function App() {
   const [value, setValue] = useState("");
 
-  const { articles, status, error } = useSearch(value);
+  const { articles, status, error } = useSearch(useDebounce(value));
 
   return (
     <div className="App">

@@ -1,18 +1,31 @@
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
-
-const useSearch = (query) => {
+export const useSearch = (query) => {
   const [state, setState] = useState({
     articles: [],
     status: "IDLE",
     error: "",
   });
 
+  const cancelToken = useRef(null);
+
   useEffect(() => {
+    if (query.length < 3) return;
+
+    if (cancelToken.current) {
+      console.log("canceltoken.current");
+      cancelToken.current.cancel();
+    }
+
+    cancelToken.current = axios.CancelToken.source();
+
     axios
       .get(
-        `https://en.wikipedia.org/w/api.php?origin=*&action=opensearch&search=${query}`
+        `https://en.wikipedia.org/w/api.php?origin=*&action=opensearch&search=${query}`,
+        {
+          cancelToken: cancelToken.current.token,
+        }
       )
       .then(function (response) {
         const parsedResponse = [];
@@ -30,6 +43,11 @@ const useSearch = (query) => {
         });
       })
       .catch(function (error) {
+        if (axios.isCancel(error)) {
+          console.log(" Cancelled wiki call");
+          return;
+        }
+
         setState({
           articles: [],
           status: "ERROR",
@@ -41,4 +59,18 @@ const useSearch = (query) => {
   return state;
 };
 
-export default useSearch;
+export const useDebounce = (value, delay = 500) => {
+  const [debounceValue, setDebounceValue] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebounceValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [value, delay]);
+
+  return debounceValue;
+};
